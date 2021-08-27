@@ -1,4 +1,5 @@
-﻿using Akka.Streams.SignalR.AspNetCore;
+﻿using System.Threading.Tasks;
+using Akka.Streams.SignalR.AspNetCore;
 using Akka.Streams.SignalR.AspNetCore.Internals;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,10 +19,18 @@ namespace Akka.Cluster.StreamingStatus.Hubs
     
     public class ClusterStatusHub : StreamHub<ClusterStream>
     {
-        public ClusterStatusHub(IStreamDispatcher dispatcher) : base(dispatcher)
+        private readonly IClusterMonitor _monitor;
+        
+        public ClusterStatusHub(IStreamDispatcher dispatcher, IClusterMonitor monitor) : base(dispatcher)
         {
+            _monitor = monitor;
         }
 
+        public override Task OnConnectedAsync()
+        {
+            _monitor.StartMonitor(Context.ConnectionId);
+            return base.OnConnectedAsync();
+        }
     }
 
     public static class ClusterStatusHubExtensions
@@ -29,8 +38,8 @@ namespace Akka.Cluster.StreamingStatus.Hubs
         public static IServiceCollection AddClusterStatusServices(this IServiceCollection services)
         {
             services.AddSingleton<SignalRStatusService>();
-            services.AddSingleton<IStreamingStatusService, SignalRStatusService>();
-            services.AddSingleton<IStreamingStatusInterface, SignalRStatusService>();
+            services.AddSingleton<IStreamingStatusService>(sp => sp.GetRequiredService<SignalRStatusService>());
+            services.AddSingleton<IStreamingStatusInterface>(sp => sp.GetRequiredService<SignalRStatusService>());
             
             return services;
         }

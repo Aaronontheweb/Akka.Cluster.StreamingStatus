@@ -2,7 +2,6 @@
 using System.Threading;
 using Akka.Actor;
 using Akka.Cluster.StreamingStatus.Hubs;
-using Akka.DependencyInjection;
 using Akka.Event;
 using Akka.Streams;
 using Akka.Streams.Dsl;
@@ -23,24 +22,6 @@ namespace Akka.Cluster.StreamingStatus.Actors
         public string ConnectionId { get; }
     }
 
-    public sealed class ClusterStatusManager : ReceiveActor
-    {
-        public IDependencyResolver Resolver { get; } = DependencyResolver.For(Context.System).Resolver;
-
-        public ClusterStatusManager()
-        {
-            Receive<BeginMonitor>(m =>
-            {
-                var childName = Uri.EscapeUriString(m.ConnectionId);
-                Context.Child(childName).GetOrElse(() =>
-                {
-                    var props = Resolver.Props<ClusterStatusActor>(m.ConnectionId);
-                    return Context.ActorOf(props, childName);
-                });
-            });
-        }
-    }
-    
     public sealed class ClusterStatusActor : ReceiveActor
     {
         private readonly string _connectionId;
@@ -67,6 +48,7 @@ namespace Akka.Cluster.StreamingStatus.Actors
 
             ReceiveAsync<IPbmClient>(async client =>
             {
+                _pbmClient = client;
                 _log.Info("Received connection to local Petabridge.Cmd host...");
 
                 _log.Info("Executing `pbm cluster tail` to begin tracking cluster events...");
@@ -74,6 +56,11 @@ namespace Akka.Cluster.StreamingStatus.Actors
                 _switch = cmdStream.KillSwitch;
 
                 var (completionTask, simpleStream) = cmdStream.Stream.PreMaterialize(Materializer);
+
+                if (!_streamingInterface.HasValue)
+                {
+                    _log.Info("SignalR not yet ready.");
+                }
 
                 _log.Info("Connected to SignalR...");
 

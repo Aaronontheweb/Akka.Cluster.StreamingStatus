@@ -32,13 +32,12 @@ namespace Akka.Cluster.StreamingStatus
                 app.UseDeveloperExceptionPage();
             }
 
+            app.UseDefaultFiles();
             app.UseStaticFiles();
             app.UseRouting();
 
             app.UseEndpoints(ep =>
             {
-                ep.MapControllerRoute("default",
-                    "{controller=Home}/{action=Index}/{id?}");
                 ep.MapHub<ClusterStatusHub>("/hubs/clusterStatus");
             });
         }
