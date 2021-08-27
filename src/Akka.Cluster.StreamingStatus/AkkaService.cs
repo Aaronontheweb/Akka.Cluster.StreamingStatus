@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Bootstrap.Docker;
+using Akka.Cluster.StreamingStatus.Actors;
 using Akka.Configuration;
 using Akka.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -15,20 +16,20 @@ using Petabridge.Cmd.Remote;
 
 namespace Akka.Cluster.StreamingStatus
 {
-    public interface IConsoleReporter{
-        void Report(string msg);
+    public interface IClusterMonitor{
+        void StartMonitor(string connectionId);
     }
 
 
     /// <summary>
     /// <see cref="IHostedService"/> that runs and manages <see cref="ActorSystem"/> in background of application.
     /// </summary>
-    public class AkkaService : IHostedService, IConsoleReporter
+    public class AkkaService : IHostedService, IClusterMonitor
     {
         private ActorSystem ClusterSystem;
         private readonly IServiceProvider _serviceProvider;
 
-        public IActorRef ConsoleActor {get; private set;}
+        public IActorRef ClusterStatusManager {get; private set;}
 
         public AkkaService(IServiceProvider serviceProvider)
         {
@@ -63,7 +64,7 @@ namespace Akka.Cluster.StreamingStatus
 
             // use the ServiceProvider ActorSystem Extension to start DI'd actors
             var sp = DependencyResolver.For(ClusterSystem);
-            ConsoleActor = ClusterSystem.ActorOf(Props.Create(() => new ConsoleActor()), "console");
+            ClusterStatusManager = ClusterSystem.ActorOf(Props.Create(() => new ClusterStatusManager()), "cluster-status");
             
             return Task.CompletedTask;
         }
@@ -75,9 +76,9 @@ namespace Akka.Cluster.StreamingStatus
              await CoordinatedShutdown.Get(ClusterSystem).Run(CoordinatedShutdown.ClrExitReason.Instance);
         }
 
-        public void Report(string msg)
+        public void StartMonitor(string connectionId)
         {
-            ConsoleActor.Tell(msg);
+            ClusterStatusManager.Tell(new BeginMonitor(connectionId));
         }
     }
 }

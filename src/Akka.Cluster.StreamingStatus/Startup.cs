@@ -1,6 +1,4 @@
-using Akka.Actor;
 using Akka.Cluster.StreamingStatus.Hubs;
-using Akka.Event;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -9,15 +7,6 @@ using Microsoft.Extensions.Hosting;
 
 namespace Akka.Cluster.StreamingStatus
 {
-    public sealed class ConsoleActor : ReceiveActor
-    {
-        private readonly ILoggingAdapter _log = Context.GetLogger();
-        public ConsoleActor()
-        {
-            ReceiveAny(_ => _log.Info("Received: {0}", _));
-        }
-    }
-
     public class Startup
     {
         // This method gets called by the runtime. Use this method to add services to the container.
@@ -29,10 +18,10 @@ namespace Akka.Cluster.StreamingStatus
             services.AddSignalRAkkaStream(); // Makes IStreamDispatcher available
             
               // creates an instance of the ISignalRProcessor that can be handled by SignalR
-            services.AddSingleton<IConsoleReporter, AkkaService>();
+            services.AddSingleton<IClusterMonitor, AkkaService>();
 
             // starts the IHostedService, which creates the ActorSystem and actors
-            services.AddHostedService<AkkaService>(sp => (AkkaService)sp.GetRequiredService<IConsoleReporter>());
+            services.AddHostedService<AkkaService>(sp => (AkkaService)sp.GetRequiredService<IClusterMonitor>());
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -43,6 +32,7 @@ namespace Akka.Cluster.StreamingStatus
                 app.UseDeveloperExceptionPage();
             }
 
+            app.UseStaticFiles();
             app.UseRouting();
 
             app.UseEndpoints(ep =>
