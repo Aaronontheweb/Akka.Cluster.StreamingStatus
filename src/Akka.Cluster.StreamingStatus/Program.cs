@@ -5,6 +5,7 @@ using Akka.Bootstrap.Docker;
 using Akka.Configuration;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Petabridge.Cmd.Cluster;
 using Petabridge.Cmd.Host;
 using Petabridge.Cmd.Remote;
@@ -20,8 +21,14 @@ namespace Akka.Cluster.StreamingStatus
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
+                .ConfigureLogging(logging =>
+                {
+                    logging.ClearProviders();
+                    logging.AddConsole();
+                })
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
+                    webBuilder.UseKestrel();
                     webBuilder.UseStartup<Startup>();
                 });
     }

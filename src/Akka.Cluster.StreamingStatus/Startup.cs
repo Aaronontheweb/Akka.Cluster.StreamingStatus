@@ -13,6 +13,7 @@ namespace Akka.Cluster.StreamingStatus
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddRazorPages();
             services.AddClusterStatusServices();
             services.AddSignalR();
             services.AddSignalRAkkaStream(); // Makes IStreamDispatcher available
@@ -31,13 +32,13 @@ namespace Akka.Cluster.StreamingStatus
             {
                 app.UseDeveloperExceptionPage();
             }
-
-            app.UseDefaultFiles();
+            
             app.UseStaticFiles();
             app.UseRouting();
 
             app.UseEndpoints(ep =>
             {
+                ep.MapRazorPages();
                 ep.MapHub<ClusterStatusHub>("/hubs/clusterStatus");
             });
         }
