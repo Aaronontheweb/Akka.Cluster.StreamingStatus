@@ -1,4 +1,5 @@
 using Akka.Actor;
+using Akka.Cluster.StreamingStatus.Hubs;
 using Akka.Event;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -23,6 +24,10 @@ namespace Akka.Cluster.StreamingStatus
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddClusterStatusServices();
+            services.AddSignalR();
+            services.AddSignalRAkkaStream(); // Makes IStreamDispatcher available
+            
               // creates an instance of the ISignalRProcessor that can be handled by SignalR
             services.AddSingleton<IConsoleReporter, AkkaService>();
 
@@ -40,15 +45,11 @@ namespace Akka.Cluster.StreamingStatus
 
             app.UseRouting();
 
-            app.UseEndpoints(endpoints =>
+            app.UseEndpoints(ep =>
             {
-                var reporter = endpoints.ServiceProvider.GetRequiredService<IConsoleReporter>();
-
-                endpoints.MapGet("/", async context =>
-                {
-                    reporter.Report($"hit from {context.TraceIdentifier}"); // calls Akka.NET under the covers
-                    await context.Response.WriteAsync("Hello World!");
-                });
+                ep.MapControllerRoute("default",
+                    "{controller=Home}/{action=Index}/{id?}");
+                ep.MapHub<ClusterStatusHub>("/hubs/clusterStatus");
             });
         }
     }
