@@ -1,0 +1,23 @@
+version: '3'
+
+services:
+  mainnode:
+    image: akka.cluster.streamingstatus:latest
+    hostname: streaming.main
+    ports:
+      - '9110:9110'
+      - '8808:80'
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      CLUSTER_PORT: 4055
+      CLUSTER_IP: "streaming.main"
+      CLUSTER_SEEDS: "akka.tcp://ClusterSys@streaming.main:4055"
+
+  streaming:
+    image: akka.cluster.streamingstatus:latest
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      CLUSTER_PORT: 4055
+      CLUSTER_SEEDS: "akka.tcp://ClusterSys@streaming.main:4055"
+    depends_on:
+      - "mainnode"
