@@ -6,7 +6,7 @@ services:
     hostname: streaming.main
     ports:
       - '9110:9110'
-      - '8808:80'
+      - '8080:8080'
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       CLUSTER_PORT: 4055
