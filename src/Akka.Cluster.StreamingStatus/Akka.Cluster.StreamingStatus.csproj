@@ -26,8 +26,7 @@
     <PackageReference Include="Akka.Cluster" Version="$(AkkaVersion)" />
     <PackageReference Include="Akka.Streams" Version="$(AkkaVersion)" />
     <PackageReference Include="Akka.DependencyInjection" Version="$(AkkaVersion)" />
-    <PackageReference Include="Akka.Streams.SignalR.AspNetCore" Version="1.0.0-beta5" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="5.0.0" />
+    <PackageReference Include="Akka.Streams.SignalR.AspNetCore" Version="1.5.15" />
     <PackageReference Include="Petabridge.Cmd.Cluster" Version="$(PbmVersion)" />
     <PackageReference Include="Petabridge.Cmd.Remote" Version="$(PbmVersion)" />
     <PackageReference Include="Akka.Bootstrap.Docker">
