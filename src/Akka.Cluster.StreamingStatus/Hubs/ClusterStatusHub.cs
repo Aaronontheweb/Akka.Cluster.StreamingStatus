@@ -1,4 +1,7 @@
 ﻿using System.Threading.Tasks;
+using Akka.Actor;
+using Akka.Cluster.StreamingStatus.Actors;
+using Akka.Hosting;
 using Akka.Streams.SignalR.AspNetCore;
 using Akka.Streams.SignalR.AspNetCore.Internals;
 using Microsoft.AspNetCore.SignalR;
@@ -19,17 +22,23 @@ namespace Akka.Cluster.StreamingStatus.Hubs
     
     public class ClusterStatusHub : StreamHub<ClusterStream>
     {
-        private readonly IClusterMonitor _monitor;
+        private readonly IRequiredActor<ClusterStatusManager> _monitor;
         
-        public ClusterStatusHub(IStreamDispatcher dispatcher, IClusterMonitor monitor) : base(dispatcher)
+        public ClusterStatusHub(IStreamDispatcher dispatcher, IRequiredActor<ClusterStatusManager> monitor) : base(dispatcher)
         {
             _monitor = monitor;
         }
 
         public override Task OnConnectedAsync()
         {
-            _monitor.StartMonitor(Context.ConnectionId);
+            _monitor.ActorRef.Tell(new BeginMonitor(Context.ConnectionId));
             return base.OnConnectedAsync();
+        }
+        
+        public override Task OnDisconnectedAsync(Exception? exception)
+        {
+            _monitor.ActorRef.Tell(new StopMonitor(Context.ConnectionId, exception?.Message));
+            return base.OnDisconnectedAsync(exception);
         }
     }
 
