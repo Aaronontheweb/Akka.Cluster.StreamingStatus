@@ -12,7 +12,7 @@ namespace Akka.Cluster.StreamingStatus.Hubs
 {
     public class ClusterStream : StreamConnector
     {
-        public ClusterStream(IStreamingStatusService service, IHubClients clients, ConnectionSourceSettings sourceSettings = null, ConnectionSinkSettings sinkSettings = null) 
+        public ClusterStream(IStreamingStatusService service, IHubClients clients, ConnectionSourceSettings? sourceSettings = null, ConnectionSinkSettings? sinkSettings = null) 
             : base(clients, sourceSettings, sinkSettings)
         {
             // populate the data so it's available to Akka.NET
