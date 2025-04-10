@@ -19,17 +19,17 @@ namespace Akka.Cluster.StreamingStatus.Hubs
         /// </summary>
         bool HasValue { get; }
         
-        Source<ISignalREvent, NotUsed> Inbound { get; }
+        Source<ISignalREvent, NotUsed>? Inbound { get; }
         
-        Sink<ISignalRResult, NotUsed> Outbound { get; }
+        Sink<ISignalRResult, NotUsed>? Outbound { get; }
     }
     
     public sealed class SignalRStatusService : IStreamingStatusInterface, IStreamingStatusService
     {
         public bool HasValue { get; private set; }
         
-        public Source<ISignalREvent, NotUsed> Inbound { get; private set; }
-        public Sink<ISignalRResult, NotUsed> Outbound { get; private set; }
+        public Source<ISignalREvent, NotUsed>? Inbound { get; private set; }
+        public Sink<ISignalRResult, NotUsed>? Outbound { get; private set; }
         
         public void Connect(Source<ISignalREvent, NotUsed> source, Sink<ISignalRResult, NotUsed> sink)
         {

@@ -12,7 +12,12 @@ using Petabridge.Cmd.Host;
 
 namespace Akka.Cluster.StreamingStatus.Actors
 {
-    public sealed class BeginMonitor
+    public interface IWithConnectionId
+    {
+        string ConnectionId { get; }
+    }
+    
+    public sealed class BeginMonitor : IWithConnectionId
     {
         public BeginMonitor(string connectionId)
         {
@@ -20,6 +25,19 @@ namespace Akka.Cluster.StreamingStatus.Actors
         }
 
         public string ConnectionId { get; }
+    }
+    
+    public sealed class StopMonitor : IWithConnectionId
+    {
+        public StopMonitor(string connectionId, string? errorMessage)
+        {
+            ConnectionId = connectionId;
+            ErrorMessage = errorMessage;
+        }
+
+        public string ConnectionId { get; }
+        
+        public string? ErrorMessage { get; }
     }
 
     public sealed class ClusterStatusActor : ReceiveActor
@@ -64,24 +82,47 @@ namespace Akka.Cluster.StreamingStatus.Actors
 
                 _log.Info("Connected to SignalR...");
 
-                var stream = simpleStream.Via(Flow.Create<CommandResponse>()
+                var (terminationTask, _) = simpleStream.Via(Flow.Create<CommandResponse>()
                         .Collect(x => !string.IsNullOrEmpty(x.Msg), response => response.Msg)
                         .Select(x => Signals.Send(_connectionId, x)))
-                    .RunWith(_streamingInterface.Outbound, Materializer);
+                    .ToMaterialized(_streamingInterface.Outbound, Keep.Both)
+                    .Run(Materializer);
 
                 _log.Info("Running!");
 
                 var self = Context.Self;
-#pragma warning disable 4014
-                completionTask.ContinueWith(tr => new Status.Failure(new ApplicationException("Upstream terminated.")))
-                    .PipeTo(self);
-#pragma warning restore 4014
+                _ = ExecuteLocals();
+                return;
+
+                async Task ExecuteLocals()
+                {
+                    try
+                    {
+                        await completionTask;
+                        self.Tell(PoisonPill.Instance);
+                    }
+                    catch (Exception ex)
+                    {
+                        _log.Warning(ex, "Termination task failed.");
+                    }
+                }
             });
 
             Receive<Status.Failure>(f =>
             {
                 _log.Warning(f.Cause, "Failed to connect to Petabridge.Cmd. Restarting.");
                 throw new InvalidOperationException("Need Petabridge.Cmd connection!");
+            });
+            
+            Receive<BeginMonitor>(m =>
+            {
+                // do nothing
+            });
+            
+            Receive<StopMonitor>(m =>
+            {
+                _log.Info("Stopping monitoring for connection [{0}]", m.ConnectionId);
+                _switch?.Shutdown();
             });
         }
 
@@ -96,6 +137,7 @@ namespace Akka.Cluster.StreamingStatus.Actors
 
         protected override void PostStop()
         {
+            _log.Info("Terminated");
             // shutdown the stream
             _switch.Shutdown();
             

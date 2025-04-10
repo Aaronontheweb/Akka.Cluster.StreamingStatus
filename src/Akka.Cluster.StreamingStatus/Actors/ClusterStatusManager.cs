@@ -10,14 +10,14 @@ namespace Akka.Cluster.StreamingStatus.Actors
 
         public ClusterStatusManager()
         {
-            Receive<BeginMonitor>(m =>
+            Receive<IWithConnectionId>(m =>
             {
                 var childName = Uri.EscapeDataString(m.ConnectionId);
                 Context.Child(childName).GetOrElse(() =>
                 {
                     var props = Resolver.Props<ClusterStatusActor>(m.ConnectionId);
                     return Context.ActorOf(props, childName);
-                });
+                }).Forward(m);
             });
         }
     }
