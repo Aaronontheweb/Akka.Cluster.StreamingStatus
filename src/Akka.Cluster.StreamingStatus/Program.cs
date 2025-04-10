@@ -1,7 +1,6 @@
 ﻿using System.IO;
 using System.Threading.Tasks;
 using Akka.Actor;
-using Akka.Bootstrap.Docker;
 using Akka.Configuration;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
@@ -20,10 +19,15 @@ namespace Akka.Cluster.StreamingStatus
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
-                .ConfigureWebHostDefaults(webBuilder =>
+                .ConfigureHostConfiguration(builder =>
                 {
-                    webBuilder.UseStartup<Startup>();
-                });
+                    var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
+
+                    builder.AddJsonFile("appsettings.json", optional: true)
+                        .AddJsonFile($"appsettings.{env}.json",
+                            optional: true)
+                        .AddEnvironmentVariables();
+                })
+                .ConfigureWebHostDefaults(webBuilder => { webBuilder.UseStartup<Startup>(); });
     }
-   
 }

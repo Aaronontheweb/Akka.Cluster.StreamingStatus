@@ -12,7 +12,7 @@ namespace Akka.Cluster.StreamingStatus.Actors
         {
             Receive<BeginMonitor>(m =>
             {
-                var childName = Uri.EscapeUriString(m.ConnectionId);
+                var childName = Uri.EscapeDataString(m.ConnectionId);
                 Context.Child(childName).GetOrElse(() =>
                 {
                     var props = Resolver.Props<ClusterStatusActor>(m.ConnectionId);
