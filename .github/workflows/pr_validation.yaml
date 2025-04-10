@@ -38,3 +38,8 @@ jobs:
 
       - name: "dotnet test"
         run: dotnet test -c Release
+
+      - name: "Build Docker Image"
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          docker build -t akka.cluster.streamingstatus:latest .
