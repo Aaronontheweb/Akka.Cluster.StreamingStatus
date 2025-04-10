@@ -3,7 +3,19 @@
     <OutputType>Exe</OutputType>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <ContainerRepository>akka.cluster.streamingstatus</ContainerRepository>
+    <ContainerImageTags>$(VersionPrefix);latest</ContainerImageTags>
   </PropertyGroup>
+
+
+  <ItemGroup>
+      <!-- HTTP/HTTPS -->
+      <ContainerPort Include="80" Type="tcp" />
+      <ContainerPort Include="443" Type="tcp" />
+      <!-- Petabridge.Cmd -->
+      <ContainerPort Include="9110" Type="tcp" />
+  </ItemGroup>
 
   <ItemGroup>
     <None Update="wwwroot\index.html">
