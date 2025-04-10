@@ -42,4 +42,4 @@ jobs:
       - name: "Build Docker Image"
         if: matrix.os == 'ubuntu-latest'
         run: |
-          docker build -t akka.cluster.streamingstatus:latest .
+          dotnet publish --os linux --arch x64 /t:PublishContainer
