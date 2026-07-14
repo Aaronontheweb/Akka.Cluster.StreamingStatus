@@ -1,8 +1,7 @@
 using Akka.Configuration;
 using Akka.Actor.Dsl;
-using Akka.TestKit.Xunit2;
+using Akka.TestKit.Xunit;
 using Xunit;
-using Xunit.Abstractions;
 using Akka.Actor;
 
 namespace Petabridge.App.Tests
